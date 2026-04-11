@@ -578,6 +578,9 @@ body { font-family: var(--font); background: #EBF4F8; color: var(--gray-800); mi
       <button class="btn btn-outline btn-sm" onclick="sessionStorage.removeItem('kaz_authed');showView('dashboard')">Lock &amp; exit</button>
     </div>
   </div>
+  <!-- Urgent actions — authorisations and reviews (above tabs) -->
+  <div id="kazUrgentContent"></div>
+
   <!-- Inner tabs -->
   <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--gray-200);">
     <button class="kaz-inner-tab active" id="kzt_apf" onclick="setKazTab('apf')" id="kazTab1Btn">⛺ APF Activity Camps</button>
@@ -823,6 +826,59 @@ body { font-family: var(--font); background: #EBF4F8; color: var(--gray-800); mi
   </div>
 </div>
 
+<!-- KAZ AUTHORISE OVERLAY -->
+<div id="kazAuthoriseOverlay" style="display:none;position:fixed;inset:0;background:rgba(2,62,138,0.75);z-index:450;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:var(--white);border-radius:var(--radius);width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.3);">
+    <div style="background:linear-gradient(135deg,#F77F00,#D62828);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#fff;">⚡ Authorise task to begin</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;" id="kaoBrief"></div>
+      </div>
+      <button onclick="document.getElementById('kazAuthoriseOverlay').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:12px;font-size:13px;margin-bottom:16px;" id="kaoTaskBrief"></div>
+      <div style="font-size:12px;font-weight:700;color:#7A4F00;margin-bottom:10px;">Tick each box to confirm:</div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="kao_c1" style="margin-top:2px;accent-color:var(--amber);flex-shrink:0;"> I have given clear verbal instructions to <span id="kaoStaff1" style="font-weight:700;margin-left:4px;"></span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="kao_c2" style="margin-top:2px;accent-color:var(--amber);flex-shrink:0;"> <span id="kaoStaff2"></span> has confirmed they understand what is required</label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer;"><input type="checkbox" id="kao_c3" style="margin-top:2px;accent-color:var(--amber);flex-shrink:0;"> I am satisfied they have taken the instructions on board</label>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Additional instructions (optional)</label>
+        <textarea id="kao_notes" placeholder="e.g. Use the 2024 template. CC me on all emails." style="min-height:60px;width:100%;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('kazAuthoriseOverlay').style.display='none'">Cancel</button>
+        <button onclick="submitKazAuthoriseOverlay()" style="padding:10px 24px;background:linear-gradient(135deg,#F77F00,#D62828);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;">I authorise this task to begin →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KAZ REVIEW OVERLAY -->
+<div id="kazReviewOverlay" style="display:none;position:fixed;inset:0;background:rgba(2,62,138,0.75);z-index:450;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:var(--white);border-radius:var(--radius);width:100%;max-width:560px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.3);">
+    <div style="background:linear-gradient(135deg,#064E3B,#059669);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#fff;">✅ Review completed task</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;" id="kroTaskName"></div>
+      </div>
+      <button onclick="document.getElementById('kazReviewOverlay').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:13px;" id="kroSummary"></div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Your feedback (optional)</label>
+        <textarea id="kro_comments" placeholder="Add comments, corrections needed, or notes..." style="min-height:60px;width:100%;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+        <button onclick="submitKazReview('approved')" style="padding:9px 20px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;">✓ Mark as completed</button>
+        <button onclick="submitKazReview('revision')" style="padding:9px 20px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;">↩ Needs revision</button>
+        <button onclick="submitKazReview('redo')" style="padding:9px 20px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;">✕ Redo required</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- QUICK ASSIGN OVERLAY -->
 <div id="quickAssignOverlay" style="display:none;position:fixed;inset:0;background:rgba(2,62,138,0.7);z-index:400;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;">
   <div style="background:var(--white);border-radius:var(--radius);width:100%;max-width:580px;margin:auto;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.3);">
@@ -944,6 +1000,22 @@ body { font-family: var(--font); background: #EBF4F8; color: var(--gray-800); mi
         </div>
         <button onclick="document.getElementById('staffAddRow').style.display='none'" style="margin-top:8px;background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:var(--font);">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Shared app link -->
+  <div class="panel" style="margin-bottom:20px;">
+    <div class="panel-header"><span class="panel-title">🔗 Shared app link (for WhatsApp alerts)</span></div>
+    <div style="padding:20px;max-width:560px;">
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:6px;">When Kaz sends a WhatsApp alert, this link is included so staff can open the app directly. Save the HTML file to Google Drive, Dropbox, or any shared location and paste the link here.</p>
+      <p style="font-size:12px;color:var(--blue);margin-bottom:14px;">💡 <strong>Quickest option:</strong> Upload the HTML file to Google Drive → right-click → Get link → set to "Anyone with link can view" → paste here.</p>
+      <div style="display:flex;gap:10px;align-items:flex-end;">
+        <div class="field" style="flex:1;margin:0;"><label>App URL</label>
+          <input type="url" id="appLinkInput" placeholder="https://drive.google.com/file/d/... or Dropbox/OneDrive link">
+        </div>
+        <button onclick="saveAppLink()" style="padding:9px 16px;background:var(--teal-dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap;">Save link</button>
+      </div>
+      <div id="appLinkConfirm" style="font-size:12px;color:var(--teal-dark);margin-top:6px;font-weight:600;"></div>
     </div>
   </div>
 
@@ -2265,7 +2337,9 @@ function renderKazView() {
           </div>
         </div>`).join('');
 
-  const allHtml = (authHtml || '') + `
+  // Urgent actions go ABOVE the tabs — never overwritten by tab switching
+  const urgentContainer = document.getElementById('kazUrgentContent');
+  if (urgentContainer) urgentContainer.innerHTML = (authHtml || '') + `
     <div class="panel" style="margin-bottom:16px;${pendingReview.length>0?'border:2px solid var(--teal);':''}">
       <div class="panel-header" style="${pendingReview.length>0?'background:var(--teal-light);':''}">
         <span class="panel-title" style="${pendingReview.length>0?'color:var(--teal-dark);':''}">
@@ -2274,41 +2348,8 @@ function renderKazView() {
         ${pendingReview.length>0?'<span style="font-size:12px;color:var(--teal-dark);">Staff have completed these — your decision needed</span>':''}
       </div>
       ${reviewCardsHtml}
-    </div>
-    <div class="panel">
-      <div class="panel-header"><span class="panel-title">All tasks assigned by Kaz (${kazTasks.length})</span></div>
-      <table class="data-table">
-        <thead><tr><th>Task</th><th>Staff</th><th>Status</th><th>Priority</th><th>Deadline</th><th>Action needed</th></tr></thead>
-        <tbody>${kazTasks.length===0
-          ? '<tr class="empty-row"><td colspan="6">No tasks yet</td></tr>'
-          : kazTasks.map(t => {
-              let action = '';
-              if (t.staffStarted && !t.kazStarted) {
-                action = '<button onclick="scrollToAuth(\''+t.id+'\')" style="padding:6px 14px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;">⚡ Authorise to start</button>';
-              } else if (t.status === 'kaz-review') {
-                action = '<button onclick="scrollToReview(\''+t.id+'\')" style="padding:6px 14px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;">✅ Approve / Reject</button>';
-              } else if (t.status === 'approved') {
-                action = '<span style="font-size:12px;color:var(--teal);font-weight:600;">✓ Completed</span>';
-              } else if (t.status === 'revision') {
-                action = '<span style="font-size:12px;color:var(--amber);font-weight:600;">↩ Revision sent</span>';
-              } else if (t.status === 'redo') {
-                action = '<span style="font-size:12px;color:var(--red);font-weight:600;">✕ Redo sent</span>';
-              } else {
-                action = '<button class="btn btn-outline btn-sm" onclick="openDetail(\''+t.id+'\')">View</button>';
-              }
-              const understandingNote = t.staffUnderstood && t.staffUnderstanding
-                ? `<div style="font-size:11px;color:var(--teal-dark);margin-top:2px;">📝 "${esc(t.staffUnderstanding.slice(0,60))}${t.staffUnderstanding.length>60?'…':''}"</div>` : '';
-              const quickBadge = t.quickAssigned ? '<span style="font-size:10px;background:#FFF5E6;color:#7A4F00;border:1px solid #F77F00;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;">Quick assign</span>' : '';
-              const editBtn = t.quickAssigned ? '<button onclick="editQuickAssign(\''+t.id+'\')" style="padding:5px 12px;background:transparent;border:1px solid var(--amber);color:#7A4F00;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">✏️ Edit</button>' : '';
-              const delBtn = t.quickAssigned ? '<button onclick="deleteQuickTask(\''+t.id+'\')" style="padding:5px 12px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">🗑 Delete</button>' : '';
-              const waBtn = t.quickAssigned && !t.staffUnderstood ? '<button onclick="sendWaAlert(\''+t.id+'\')" style="padding:5px 12px;background:transparent;border:1px solid #25D366;color:#075E54;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">📱 WA</button>' : '';
-              return '<tr><td><div class="task-name">'+esc(t.taskName)+quickBadge+'</div>'+understandingNote+'</td><td class="staff">'+esc(t.staff)+'</td><td><span class="badge '+t.status+'">'+(STATUS_LABELS[t.status]||t.status)+'</span></td><td>'+prioBadge(t.priority)+'</td><td class="date">'+fmtDate(t.deadline)+'</td><td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">'+action+editBtn+delBtn+waBtn+'</td></tr>';
-            }).join('')}
-        </tbody>
-      </table>
     </div>`;
-
-  document.getElementById('kazTabContent').innerHTML = allHtml;
+  // Tab content (all tasks split by type) renders separately and never wipes the urgent panel
   renderKazTabContent();
 }
 
@@ -2356,8 +2397,8 @@ function renderKazTabContent() {
   const makeRow = t => {
     const id = t.id;
     let action = '';
-    if (t.staffStarted && !t.kazStarted) action = '<button onclick="scrollToAuth(\''+id+'\')" style="padding:5px 12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">⚡ Authorise</button>';
-    else if (t.status === 'kaz-review') action = '<button onclick="scrollToReview(\''+id+'\')" style="padding:5px 12px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">✅ Review</button>';
+    if (t.staffStarted && !t.kazStarted) action = '<button onclick="openKazAuthoriseOverlay(\''+id+'\')" style="padding:5px 12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">⚡ Authorise</button>';
+    else if (t.status === 'kaz-review') action = '<button onclick="openKazReviewOverlay(\''+id+'\')" style="padding:5px 12px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">✅ Review</button>';
     else if (t.status === 'approved') action = '<span style="font-size:11px;color:var(--teal);font-weight:700;">✓ Done</span>';
     else action = '<button class="btn btn-outline btn-sm" onclick="openDetail(\''+id+'\')">View</button>';
     const editBtn = t.quickAssigned ? '<button onclick="editQuickAssign(\''+id+'\')" style="padding:5px 10px;background:transparent;border:1px solid var(--amber);color:#7A4F00;border-radius:var(--radius-sm);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;">✏️</button>' : '';
@@ -2427,19 +2468,91 @@ function renderPrivateTab(container) {
     </div>`;
 }
 
-function scrollToAuth(taskId) {
-  // Scroll to the authorisation panel for this task
-  const el = document.getElementById('kazAuthPanel_' + taskId);
-  if (el) { el.closest('[style*="padding:16px"]').scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.outline = '2px solid var(--amber)'; el.style.borderRadius = '6px'; setTimeout(()=>el.style.outline='',2000); }
-  else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+let _kaoTaskId = null;
+let _kroTaskId = null;
+
+function openKazAuthoriseOverlay(taskId) {
+  const t = getTask(taskId);
+  if (!t) return;
+  _kaoTaskId = taskId;
+  document.getElementById('kaoBrief').textContent = t.taskName + ' — ' + esc(t.staff);
+  document.getElementById('kaoStaff1').textContent = t.staff || 'staff';
+  document.getElementById('kaoStaff2').textContent = t.staff || 'Staff';
+  document.getElementById('kaoTaskBrief').innerHTML =
+    '<strong>What:</strong> ' + esc(t.whatToDo||'') +
+    (t.where ? '<br><strong>Where:</strong> ' + esc(t.where) : '') +
+    (t.standards ? '<br><strong>Standards:</strong> ' + esc(t.standards) : '');
+  document.getElementById('kao_c1').checked = false;
+  document.getElementById('kao_c2').checked = false;
+  document.getElementById('kao_c3').checked = false;
+  document.getElementById('kao_notes').value = '';
+  document.getElementById('kazAuthoriseOverlay').style.display = 'flex';
 }
 
-function scrollToReview(taskId) {
-  // Scroll to the review card for this task
-  const el = document.getElementById('reviewCard_' + taskId);
-  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.outline = '2px solid var(--teal)'; el.style.borderRadius = '6px'; setTimeout(()=>el.style.outline='',2000); }
-  else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function submitKazAuthoriseOverlay() {
+  if (!document.getElementById('kao_c1').checked ||
+      !document.getElementById('kao_c2').checked ||
+      !document.getElementById('kao_c3').checked) {
+    alert('Please tick all three boxes before authorising.'); return;
+  }
+  const notes = document.getElementById('kao_notes').value.trim();
+  const t = getTask(_kaoTaskId);
+  if (!t) return;
+  t.kazStarted = true;
+  t.kazStartedAt = now();
+  t.s2_kazName = 'Kaz James';
+  t.s2_k1 = true; t.s2_k2 = true; t.s2_k3 = true;
+  if (notes) t.s2_kazNotes = notes;
+  t.currentStep = 2;
+  t.status = 'in-progress';
+  t.updatedAt = now();
+  if (!t.log) t.log = [];
+  t.log.push({ msg: 'Task authorised by Kaz — ' + t.staff + ' can now proceed to Step 3.' + (notes?' Notes: '+notes.slice(0,80):''), at: now() });
+  saveTask(t);
+  document.getElementById('kazAuthoriseOverlay').style.display = 'none';
+  renderKazView();
+  renderDashboard();
 }
+
+function openKazReviewOverlay(taskId) {
+  const t = getTask(taskId);
+  if (!t) return;
+  _kroTaskId = taskId;
+  document.getElementById('kroTaskName').textContent = t.taskName + ' — ' + (t.staff||'');
+  document.getElementById('kroSummary').innerHTML =
+    '<div><span style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;display:block;margin-bottom:3px;">How completed</span>' + esc(t.completionNotes||t.workDone||'Not recorded') + '</div>' +
+    '<div><span style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;display:block;margin-bottom:3px;">Issues noted</span>' + esc(t.completionIssues||t.mistakes||'None') + '</div>';
+  document.getElementById('kro_comments').value = '';
+  document.getElementById('kazReviewOverlay').style.display = 'flex';
+}
+
+function submitKazReview(outcome) {
+  const t = getTask(_kroTaskId);
+  if (!t) return;
+  const comments = document.getElementById('kro_comments').value.trim();
+  t.kazComments = comments;
+  t.kazName = 'Kaz James';
+  t.kazReviewedAt = now();
+  t.outcome = outcome;
+  t.status = outcome;
+  t.updatedAt = now();
+  if (!t.log) t.log = [];
+  const labels = { approved:'Completed', revision:'Needs revision', redo:'Redo required' };
+  t.log.push({ msg: 'Decision by Kaz: ' + labels[outcome] + (comments?' — '+comments.slice(0,80):''), at: now() });
+  saveTask(t);
+  document.getElementById('kazReviewOverlay').style.display = 'none';
+  if (outcome === 'approved') {
+    _pendingArchiveTaskId = _kroTaskId;
+    document.getElementById('archivePromptTitle').textContent = '"' + t.taskName + '" marked as completed';
+    document.getElementById('archivePromptMsg').textContent = 'Would you like to move this task to the archive?';
+    document.getElementById('archivePromptOverlay').style.display = 'flex';
+  }
+  renderKazView();
+  renderDashboard();
+}
+
+function scrollToAuth(taskId) { openKazAuthoriseOverlay(taskId); }
+function scrollToReview(taskId) { openKazReviewOverlay(taskId); }
 
 let _pendingArchiveTaskId = null;
 
@@ -3370,7 +3483,9 @@ function sendWaAlert(taskId) {
     clean = num.trim().replace(/[^0-9]/g,'');
   }
   const deadline = t.deadline ? ' — due ' + fmtDate(t.deadline) : '';
-  const msg = encodeURIComponent('Hi ' + (t.staff||'') + ', Kaz has assigned you a task on ' + (_workspace==='tasqi'?'TASQI':'APF Activity Camps') + ' Task Manager:\n\n*' + t.taskName + '*' + deadline + '\n\n' + (t.whatToDo||'').slice(0,200) + '\n\nPlease open the Task Manager to confirm your understanding and begin.');
+  const appUrl = getAppLink();
+  const linkLine = appUrl ? '\n\n👉 Open Task Manager: ' + appUrl : '\n\n(Ask Kaz to share the Task Manager link if you don\'t have it)';
+  const msg = encodeURIComponent('Hi ' + (t.staff||'') + ', Kaz has assigned you a task on ' + (_workspace==='tasqi'?'TASQI':'APF Activity Camps') + ' Task Manager:\n\n*' + t.taskName + '*' + deadline + '\n\n' + (t.whatToDo||'').slice(0,200) + linkLine);
   window.open('https://wa.me/' + clean + '?text=' + msg, '_blank');
 }
 
@@ -3476,7 +3591,9 @@ function saveQuickAssign() {
   renderDashboard();
   if (waNum) {
     const deadline = task.deadline ? ' — due ' + fmtDate(task.deadline) : '';
-    const msg = encodeURIComponent('Hi ' + staff + ', Kaz has assigned you a new task on ' + (_workspace==='tasqi'?'TASQI':'APF Activity Camps') + ' Task Manager:\n\n*' + taskName + '*' + deadline + '\n\n' + what.slice(0,200) + (what.length>200?'...':'') + '\n\nPlease open the Task Manager to confirm your understanding and begin.');
+    const appUrl2 = getAppLink();
+    const linkLine2 = appUrl2 ? '\n\n👉 Open Task Manager: ' + appUrl2 : '\n\n(Ask Kaz to share the Task Manager link if you don\'t have it)';
+    const msg = encodeURIComponent('Hi ' + staff + ', Kaz has assigned you a new task on ' + (_workspace==='tasqi'?'TASQI':'APF Activity Camps') + ' Task Manager:\n\n*' + taskName + '*' + deadline + '\n\n' + what.slice(0,200) + (what.length>200?'...':'') + linkLine2);
     window.open('https://wa.me/' + waNum.replace('+','') + '?text=' + msg, '_blank');
   }
 }
@@ -3591,6 +3708,17 @@ function getStaffByName(name) {
   return SDB.staff.find(s => s.name.toLowerCase() === n || s.name.toLowerCase().includes(n) || n.includes(s.name.toLowerCase()));
 }
 
+function saveAppLink() {
+  const url = (document.getElementById('appLinkInput').value||'').trim();
+  localStorage.setItem('apf_app_link', url);
+  const conf = document.getElementById('appLinkConfirm');
+  if (conf) conf.textContent = url ? '✓ Link saved — will be included in WhatsApp alerts' : 'Link cleared';
+}
+
+function getAppLink() {
+  return localStorage.getItem('apf_app_link') || '';
+}
+
 function saveCurrentStaff() {
   const name = (document.getElementById('currentStaffInput').value||'').trim();
   if (!name) { alert('Please enter a name.'); return; }
@@ -3612,6 +3740,11 @@ function renderStaffSettings() {
   const staff = SDB.staff;
   const container = document.getElementById('staffProfilesList');
   if (!container) return;
+  // Set app link field
+  const alInput = document.getElementById('appLinkInput');
+  if (alInput) alInput.value = localStorage.getItem('apf_app_link') || '';
+  const alConfirm = document.getElementById('appLinkConfirm');
+  if (alConfirm) alConfirm.textContent = localStorage.getItem('apf_app_link') ? '✓ Link saved — will be included in WhatsApp alerts' : '';
   // Set current staff name field
   const csInput = document.getElementById('currentStaffInput');
   if (csInput) csInput.value = SDB.currentStaff;
